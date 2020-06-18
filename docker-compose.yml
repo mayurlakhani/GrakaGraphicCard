@@ -1,0 +1,45 @@
+# Docker Compose file Reference (https://docs.docker.com/compose/compose-file/)
+version: '3'
+
+#Define services
+services:
+
+  #PostgreSQL Database for the application
+  graka-postgres:
+    image: "postgres:9.6-alpine"
+    container_name: graka-postgres
+    #Volume mounted for database for the storage
+    volumes:
+      - graka-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432 # Forward the exposed port 5432 on the container to port 5432 on the host machine
+
+    #Environment variable for DB name, user and password
+    environment:
+      - POSTGRES_DB=Graka
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=postgres
+
+  #Back-end Spring Boot Application
+  graka:
+    #The docker file in graka-service build the jar and provides the docker image with the following name.
+    build: ./service
+    container_name: graka-service
+    network_mode: bridge
+    #Environment variables for Spring Boot Application.
+    environment:
+      - DB_SERVER=graka-postgres
+      - POSTGRES_DB=Graka
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 8081:8081 # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    depends_on:
+      - graka-postgres
+    links: 
+      - graka-postgres
+
+
+#Volumes for DB data
+volumes:
+  graka-data:
